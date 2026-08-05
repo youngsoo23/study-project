@@ -1,0 +1,51 @@
+### record 학습 API (/api/examples/record)
+# Java record가 자동 생성하는 기능(접근자, equals/hashCode, toString)과
+# 직접 추가하는 기능(compact constructor, 불변 연산, Comparable)을 확인한다.
+# user-cards / equality는 사용자 데이터를 읽으므로 선행 데이터가 필요하다.
+
+@host = http://localhost:8080
+
+### [선행 데이터] 사용자 생성 (id=1 기대)
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "name": "김영수",
+  "email": "youngsoo@example.com"
+}
+
+### [선행 데이터] 사용자 생성 (id=2 기대)
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "name": "김철수",
+  "email": "chulsoo@example.com"
+}
+
+### 접근자 + toString 자동 생성 - 사용자 카드 목록
+GET {{host}}/api/examples/record/user-cards
+
+### equals/hashCode 자동 생성 - 같은 값의 record 두 개 비교
+GET {{host}}/api/examples/record/equality?userId=1
+
+### compact constructor - 검증 통과 + currency 대문자로 정규화(krw -> KRW)
+GET {{host}}/api/examples/record/compact-constructor?currency=krw&amount=1000
+
+### compact constructor - currency 기본값(krw) 사용
+GET {{host}}/api/examples/record/compact-constructor?amount=5000
+
+### 불변 스타일 - setter 없이 새 Money 인스턴스를 반환하는 덧셈
+GET {{host}}/api/examples/record/immutable?baseAmount=1000&addAmount=2500
+
+### Comparable 구현 - 금액 기준 정렬
+GET {{host}}/api/examples/record/sorted?amounts=5000,100,32000,700
+
+### compact constructor 검증 실패 - 음수 금액 (valid=false 응답으로 반환)
+GET {{host}}/api/examples/record/compact-constructor?currency=KRW&amount=-1
+
+### compact constructor 검증 실패 - 통화 누락 (valid=false 응답으로 반환)
+GET {{host}}/api/examples/record/compact-constructor?currency=&amount=1000
+
+### [오류] 없는 사용자로 비교 시도 (IllegalArgumentException)
+GET {{host}}/api/examples/record/equality?userId=9999

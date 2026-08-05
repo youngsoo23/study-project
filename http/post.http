@@ -1,0 +1,112 @@
+### 게시글 API (/api/posts)
+# 게시글은 userId로 사용자를 참조하므로, 반드시 사용자를 먼저 생성해야 한다.
+# 아래 "선행 데이터" 요청부터 순서대로 실행한다.
+
+@host = http://localhost:8080
+
+### [선행 데이터] 게시글 작성자 생성
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "name": "게시글작성자",
+  "email": "post.writer@example.com"
+}
+
+### [선행 데이터] 두 번째 작성자 생성 (userId 검색 확인용)
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "name": "다른작성자",
+  "email": "other.writer@example.com"
+}
+
+### 게시글 생성 (201 Created)
+POST {{host}}/api/posts
+Content-Type: application/json
+
+{
+  "title": "첫 번째 게시글",
+  "content": "헥사고날 아키텍처 학습 내용을 정리한다.",
+  "userId": 1
+}
+
+### 게시글 생성 - 키워드 검색 확인용
+POST {{host}}/api/posts
+Content-Type: application/json
+
+{
+  "title": "QueryDSL 동적 검색",
+  "content": "BooleanExpression에서 null을 반환하면 조건이 생략된다.",
+  "userId": 1
+}
+
+### 게시글 생성 - 다른 사용자의 게시글
+POST {{host}}/api/posts
+Content-Type: application/json
+
+{
+  "title": "두 번째 사용자의 글",
+  "content": "userId 조건으로만 검색되는지 확인한다.",
+  "userId": 2
+}
+
+### 전체 게시글 조회
+GET {{host}}/api/posts
+
+### 키워드로 검색 (제목/내용)
+GET {{host}}/api/posts?keyword=QueryDSL
+
+### 작성자로 검색
+GET {{host}}/api/posts?userId=1
+
+### 키워드 + 작성자 복합 검색
+GET {{host}}/api/posts?keyword=게시글&userId=1
+
+### 단건 조회
+GET {{host}}/api/posts/1
+
+### 게시글 수정 (title, content만 수정 가능)
+PUT {{host}}/api/posts/1
+Content-Type: application/json
+
+{
+  "title": "첫 번째 게시글(수정)",
+  "content": "수정된 본문이다."
+}
+
+### 게시글 삭제 (204 No Content)
+DELETE {{host}}/api/posts/3
+
+### [오류] 없는 게시글 조회 (EntityNotFoundException)
+GET {{host}}/api/posts/9999
+
+### [오류] 존재하지 않는 사용자로 게시글 생성 (EntityNotFoundException)
+POST {{host}}/api/posts
+Content-Type: application/json
+
+{
+  "title": "작성자 없음",
+  "content": "존재하지 않는 userId로 생성을 시도한다.",
+  "userId": 9999
+}
+
+### [오류] 제목 누락 (@NotBlank 검증 실패)
+POST {{host}}/api/posts
+Content-Type: application/json
+
+{
+  "title": "",
+  "content": "제목이 비어 있다.",
+  "userId": 1
+}
+
+### [오류] userId 누락 (@NotNull 검증 실패)
+POST {{host}}/api/posts
+Content-Type: application/json
+
+{
+  "title": "작성자 미지정",
+  "content": "userId가 없다."
+}

@@ -1,0 +1,71 @@
+### 함수형 인터페이스 학습 API (/api/examples/functional-interfaces)
+# java.util.function의 인터페이스를 하나씩 직접 호출해 확인한다.
+# 사용자/게시글 데이터를 읽으므로 아래 "선행 데이터" 요청을 먼저 실행한다.
+# 자세한 설명은 doc/functional-interface-example.md 참고.
+
+@host = http://localhost:8080
+
+### [선행 데이터] 사용자 생성 (id=1 기대)
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "name": "김영수",
+  "email": "youngsoo@example.com"
+}
+
+### [선행 데이터] 사용자 생성 (다른 이메일 도메인)
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "name": "김철수",
+  "email": "chulsoo@test.com"
+}
+
+### [선행 데이터] 게시글 생성 (id=1 기대)
+POST {{host}}/api/posts
+Content-Type: application/json
+
+{
+  "title": "첫 번째 게시글",
+  "content": "BiFunction 예제에서 사용한다.",
+  "userId": 1
+}
+
+### [선행 데이터] 게시글 생성 (id=2 기대, BinaryOperator 비교용)
+POST {{host}}/api/posts
+Content-Type: application/json
+
+{
+  "title": "두 번째 게시글",
+  "content": "더 나중에 수정된 게시글이 선택되는지 확인한다.",
+  "userId": 1
+}
+
+### Function<User, String> - 사용자 이름만 추출
+GET {{host}}/api/examples/functional-interfaces/user-names
+
+### Predicate<User> 조합(and) - 이름 키워드 + 이메일 도메인으로 검색
+GET {{host}}/api/examples/functional-interfaces/users/search?nameKeyword=김&emailDomain=example.com
+
+### Predicate<User> - 파라미터 기본값("")이라 조건 없이 전체 조회
+GET {{host}}/api/examples/functional-interfaces/users/search
+
+### Consumer<User> - 사용자 요약 문자열 수집
+GET {{host}}/api/examples/functional-interfaces/users/summaries
+
+### Supplier<User> - 첫 사용자, 없으면 지연 생성된 guest 반환
+GET {{host}}/api/examples/functional-interfaces/users/first-or-guest
+
+### BiFunction<User, Post, String> - 사용자와 게시글을 하나의 문자열로 결합
+GET {{host}}/api/examples/functional-interfaces/combine?userId=1&postId=1
+
+### UnaryOperator<String> - 이름 정규화(trim + 첫 글자 대문자)
+GET {{host}}/api/examples/functional-interfaces/normalize-name?name=%20%20young%20soo%20
+
+### BinaryOperator<Post> - 더 최근에 수정된 게시글 선택
+GET {{host}}/api/examples/functional-interfaces/posts/latest?postId1=1&postId2=2
+
+### [오류] 없는 사용자로 결합 시도 (EntityNotFoundException)
+GET {{host}}/api/examples/functional-interfaces/combine?userId=9999&postId=1
