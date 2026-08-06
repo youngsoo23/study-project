@@ -1,0 +1,46 @@
+### 비동기 처리 학습 API (/api/examples/async)
+# CompletableFuture, 가상 스레드, Spring @Async를 하나씩 직접 호출해 확인한다.
+# DB를 쓰지 않으므로 선행 데이터가 필요 없다.
+# 관찰 포인트: 응답의 threadName(어느 스레드에서 실행됐는지)과 totalElapsedMs(총 소요 시간).
+# 자세한 설명은 doc/async-example.md 참고.
+
+@host = http://localhost:8080
+
+### [기준] 순차 실행 - 300ms 작업 3개 => 총 900ms 이상, 모두 요청 스레드(http-nio-...)
+GET {{host}}/api/examples/async/sequential?count=3&delayMs=300
+
+### CompletableFuture 병렬 실행 - 같은 작업 3개 => 총 300ms 근처, 스레드는 example-async-N
+GET {{host}}/api/examples/async/parallel?count=3&delayMs=300
+
+### 병렬 실행 - 풀 크기(max 8)보다 많은 작업을 넣으면 큐에서 대기해 총 시간이 늘어난다
+GET {{host}}/api/examples/async/parallel?count=20&delayMs=300
+
+### 가상 스레드 - 같은 20개를 풀 제한 없이 동시에 실행 (virtualThread=true 확인)
+GET {{host}}/api/examples/async/virtual-threads?count=20&delayMs=300
+
+### 가상 스레드 - 200개도 여전히 300ms 근처
+GET {{host}}/api/examples/async/virtual-threads?count=200&delayMs=300
+
+### Spring @Async - proxy-call은 example-async-N, self-invocation은 요청 스레드에서 실행됨
+GET {{host}}/api/examples/async/spring-async?delayMs=300
+
+### thenApply / thenCompose / thenCombine 비교
+GET {{host}}/api/examples/async/chain?name=young&delayMs=200
+
+### 예외 처리 - 실패 시 exceptionally / handle / join의 차이
+GET {{host}}/api/examples/async/exception?fail=true&delayMs=100
+
+### 예외 처리 - 성공 시 exceptionally는 건너뛰고 handle만 결과를 받는다
+GET {{host}}/api/examples/async/exception?fail=false&delayMs=100
+
+### 타임아웃 - 1000ms 작업에 300ms 제한: orTimeout은 실패, completeOnTimeout은 대체값
+GET {{host}}/api/examples/async/timeout?delayMs=1000&timeoutMs=300
+
+### 타임아웃 - 제한이 작업보다 길면 둘 다 정상 결과
+GET {{host}}/api/examples/async/timeout?delayMs=200&timeoutMs=1000
+
+### [오류] count 허용 범위(1~50) 초과 (IllegalArgumentException)
+GET {{host}}/api/examples/async/parallel?count=0&delayMs=300
+
+### [오류] delayMs 허용 범위(0~3000) 초과 (IllegalArgumentException)
+GET {{host}}/api/examples/async/parallel?count=3&delayMs=10000

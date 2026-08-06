@@ -46,7 +46,7 @@
 ```text
 src/main/java/com/young/studyproject/
 ├── common/
-│   ├── config/          # 공통 Spring 설정 (QueryDSL 등)
+│   ├── config/          # 공통 Spring 설정 (QueryDSL, 비동기 executor 등)
 │   └── exception/       # 전역 예외 처리와 에러 응답
 ├── user/
 │   ├── presentation/    # Controller, 요청/응답 DTO
@@ -56,12 +56,14 @@ src/main/java/com/young/studyproject/
 ├── post/                # user와 동일한 계층 구조
 └── example/
     ├── functional/      # java.util.function 학습 API
-    └── record/          # Java record 학습 API
+    ├── record/          # Java record 학습 API
+    └── async/           # 비동기(CompletableFuture/가상 스레드/@Async) 학습 API
 ```
 
 추가 문서:
 
 - `doc/functional-interface-example.md`: 함수형 인터페이스 예제 API와 호출법
+- `doc/async-example.md`: 비동기(CompletableFuture/가상 스레드/@Async) 예제 API와 정리
 - `study-doc/interview_debrief.md`: 예제 코드의 학습 배경
 - `src/main/resources/application.yaml`: H2/JPA 런타임 설정
 
@@ -112,6 +114,7 @@ presentation -> application -> domain <- infrastructure
 - `/api/posts`: 게시글 생성, 조회, 수정, 삭제; `keyword`, `userId` 쿼리로 검색
 - `/api/examples/functional-interfaces`: 함수형 인터페이스 학습 API
 - `/api/examples/record`: record 학습 API
+- `/api/examples/async`: 비동기 처리 학습 API (DB 미사용)
 
 사용자와 게시글 데이터는 H2 인메모리에 저장되며 애플리케이션 종료 시 사라진다. 게시글 생성 전 해당 `userId`의 사용자가 있어야 한다.
 
