@@ -64,6 +64,7 @@ src/main/java/com/young/studyproject/
 
 - `doc/functional-interface-example.md`: 함수형 인터페이스 예제 API와 호출법
 - `doc/async-example.md`: 비동기(CompletableFuture/가상 스레드/@Async) 예제 API와 정리
+- `doc/generics-study-guide.md`: 제네릭 타입 읽는 법과 학습 순서 정리
 - `study-doc/interview_debrief.md`: 예제 코드의 학습 배경
 - `src/main/resources/application.yaml`: H2/JPA 런타임 설정
 
