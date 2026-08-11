@@ -71,9 +71,7 @@ public class AsyncExampleService {
         long start = System.nanoTime();
 
         List<CompletableFuture<TaskResult>> futures = IntStream.rangeClosed(1, count)
-                .mapToObj(i -> CompletableFuture.supplyAsync(
-                        () -> slowTask("task-" + i, delayMs),
-                        exampleTaskExecutor))
+                .mapToObj(i -> CompletableFuture.supplyAsync(() -> slowTask("task-" + i, delayMs), exampleTaskExecutor))
                 .toList();
 
         // allOf는 CompletableFuture<Void>라 결과를 못 받는다. 완료 대기용으로만 쓰고
