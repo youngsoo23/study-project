@@ -39,7 +39,8 @@
 
 - H2 콘솔: `http://localhost:8080/h2-console`
 - JDBC URL: `jdbc:h2:mem:studydb;MODE=MySQL`
-- 현재 자동화 테스트는 Spring context 로드 테스트만 있으므로 기능 변경 시 관련 테스트를 추가한다.
+- `docker compose up -d`: 결제/Outbox/Kafka 예제(`/api/payments`)에 필요한 로컬 Kafka 실행. 다른 기능은 Kafka 없이도 동작한다.
+- 기능 변경 시 관련 자동화 테스트를 추가한다.
 
 ## 디렉터리와 책임
 
@@ -54,6 +55,9 @@ src/main/java/com/young/studyproject/
 │   ├── domain/          # 순수 도메인 모델, Repository 포트
 │   └── infrastructure/  # JPA 엔티티/Repository, QueryDSL, 포트 구현
 ├── post/                # user와 동일한 계층 구조
+├── payment/             # 결제(Kafka Outbox 예제 시작점). user와 동일한 4계층 + presentation
+├── outbox/              # Outbox 이벤트 저장/발행(domain, application, infrastructure — presentation 없음)
+├── document/            # Kafka Consumer로 생성되는 문서(domain, application, infrastructure — presentation 없음)
 └── example/
     ├── functional/      # java.util.function 학습 API
     ├── record/          # Java record 학습 API
@@ -65,8 +69,10 @@ src/main/java/com/young/studyproject/
 - `doc/functional-interface-example.md`: 함수형 인터페이스 예제 API와 호출법
 - `doc/async-example.md`: 비동기(CompletableFuture/가상 스레드/@Async) 예제 API와 정리
 - `doc/generics-study-guide.md`: 제네릭 타입 읽는 법과 학습 순서 정리
+- `doc/kafka-outbox-dlt-example.md`: Kafka Outbox/Retry/DLT 예제 흐름과 시나리오
 - `study-doc/interview_debrief.md`: 예제 코드의 학습 배경
-- `src/main/resources/application.yaml`: H2/JPA 런타임 설정
+- `src/main/resources/application.yaml`: H2/JPA/Kafka 런타임 설정
+- `docker-compose.yml`: 결제/Outbox 예제용 로컬 Kafka 실행 환경
 
 ## 아키텍처 규칙
 
@@ -116,6 +122,7 @@ presentation -> application -> domain <- infrastructure
 - `/api/examples/functional-interfaces`: 함수형 인터페이스 학습 API
 - `/api/examples/record`: record 학습 API
 - `/api/examples/async`: 비동기 처리 학습 API (DB 미사용)
+- `/api/payments`: 결제 생성/조회/완료, 문서 생성 강제 실패 플래그; Kafka Outbox/Retry/DLT 학습 예제(`doc/kafka-outbox-dlt-example.md`)
 
 사용자와 게시글 데이터는 H2 인메모리에 저장되며 애플리케이션 종료 시 사라진다. 게시글 생성 전 해당 `userId`의 사용자가 있어야 한다.
 

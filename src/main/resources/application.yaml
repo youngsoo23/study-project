@@ -20,3 +20,17 @@ spring:
     console:
       enabled: true
       path: /h2-console
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # Jackson 3(tools.jackson) 기반 직렬화기. 프로젝트가 Jackson 3으로 옮겨오면서
+      # 구버전(com.fasterxml.jackson 기반) JsonSerializer/JsonDeserializer는 런타임에 없는 클래스를 찾는다.
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.young.studyproject.payment.application.dto
