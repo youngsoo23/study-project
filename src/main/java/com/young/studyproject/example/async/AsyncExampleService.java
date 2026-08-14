@@ -94,6 +94,9 @@ public class AsyncExampleService {
      * 가상 스레드(Java 21+): 작업마다 스레드를 하나씩 만들어도 부담이 적다.
      * 스레드 풀 크기에 막히지 않으므로 blocking I/O를 대량으로 동시에 기다리기 좋다.
      * 응답의 threadName이 {@code VirtualThread[#..]} 형태이고 virtualThread=true인 것을 확인한다.
+     *
+     * <p>작업 하나가 실패해도 전체 요청이 실패하지 않도록 future마다 exceptionally로 감싼다.
+     * 감싸지 않으면 join()에서 CompletionException이 던져져 아직 끝나지 않은 다른 작업의 결과까지 버려진다.
      */
     public AsyncExecutionResponse runOnVirtualThreads(int count, long delayMs) {
         validate(count, delayMs, MAX_VIRTUAL_COUNT);
@@ -102,9 +105,13 @@ public class AsyncExampleService {
         // try-with-resources: close()가 이미 제출된 작업이 끝날 때까지 기다려준다.
         try (ExecutorService virtualExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
             List<CompletableFuture<TaskResult>> futures = IntStream.rangeClosed(1, count)
-                    .mapToObj(i -> CompletableFuture.supplyAsync(
-                            () -> slowTask("task-" + i, delayMs),
-                            virtualExecutor))
+                    .mapToObj(i -> {
+                        String taskName = "task-" + i;
+                        long taskStart = System.nanoTime();
+                        return CompletableFuture
+                                .supplyAsync(() -> slowTask(taskName, delayMs), virtualExecutor)
+                                .exceptionally(throwable -> failedTaskResult(taskName, taskStart, throwable));
+                    })
                     .toList();
 
             List<TaskResult> tasks = futures.stream()
@@ -113,7 +120,7 @@ public class AsyncExampleService {
 
             return AsyncExecutionResponse.of(
                     "virtual-threads",
-                    "작업 수만큼 가상 스레드를 만들어 실행. 고정 크기 풀과 달리 개수 제한에 걸리지 않는다.",
+                    "작업 수만큼 가상 스레드를 만들어 실행. 개별 작업이 실패해도 exceptionally로 감싸 다른 작업 결과에는 영향을 주지 않는다.",
                     start,
                     tasks
             );
@@ -322,6 +329,21 @@ public class AsyncExampleService {
         long start = System.nanoTime();
         sleep(delayMs);
         return TaskResult.of(taskName, start, taskName + " 완료");
+    }
+
+    /**
+     * exceptionally에서 받은 예외를 실패 결과를 나타내는 TaskResult로 변환한다.
+     * throwable은 join()과 마찬가지로 CompletionException으로 감싸져 있으므로 getCause()로 원인을 꺼낸다.
+     */
+    TaskResult failedTaskResult(String taskName, long startNanos, Throwable throwable) {
+        Thread current = Thread.currentThread();
+        return new TaskResult(
+                taskName,
+                current.getName(),
+                current.isVirtual(),
+                TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos),
+                "실패: " + throwable.getCause().getMessage()
+        );
     }
 
     /**

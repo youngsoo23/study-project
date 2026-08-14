@@ -59,6 +59,9 @@ commonPool은 `CPU 코어 수 - 1` 크기라서 blocking I/O를 올리면 애플
 `virtual-threads?count=200`도 총 시간이 `delayMs` 근처에 머문다.
 blocking 대기가 많은 작업에 적합하고, CPU를 계속 쓰는 작업에는 이점이 없다.
 
+작업 하나가 실패해도 `exceptionally`로 감싸 실패 결과(`value`에 `"실패: ..."`)로 남기므로,
+join()에서 CompletionException이 던져져 나머지 작업 결과까지 통째로 버려지는 일은 없다.
+
 ### 4. `@Async`는 AOP 프록시로 동작한다
 
 - **다른 빈**이 호출해야 프록시를 거쳐 별도 스레드에서 실행된다.

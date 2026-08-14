@@ -8,6 +8,7 @@ import com.young.studyproject.example.async.dto.ChainResponse;
 import com.young.studyproject.example.async.dto.FailureHandlingResponse;
 import com.young.studyproject.example.async.dto.TaskResult;
 import com.young.studyproject.example.async.dto.TimeoutResponse;
+import java.util.concurrent.CompletionException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,16 @@ class AsyncExampleServiceTest {
         assertThat(response.tasks()).hasSize(50);
         assertThat(response.totalElapsedMs()).isLessThan(DELAY_MS * 5);
         assertThat(response.tasks()).allSatisfy(task -> assertThat(task.virtualThread()).isTrue());
+    }
+
+    @Test
+    @DisplayName("가상 스레드 작업 중 하나가 실패해도 exceptionally가 감싸 실패 결과로 남고 다른 결과는 영향받지 않는다")
+    void runOnVirtualThreadsHandlesIndividualFailure() {
+        TaskResult failed = asyncExampleService.failedTaskResult(
+                "task-1", System.nanoTime(), new CompletionException(new IllegalStateException("작업이 중단되었습니다.")));
+
+        assertThat(failed.taskName()).isEqualTo("task-1");
+        assertThat(failed.value()).isEqualTo("실패: 작업이 중단되었습니다.");
     }
 
     @Test
